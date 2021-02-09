@@ -77,3 +77,27 @@ describe("totalLikes", () => {
   test("returns 0 when passing a wrong type of argument", () => {});
   expect(listHelper.totalLikes("blogs")).toBe(0);
 });
+
+describe("favoriteBlog", () => {
+  test("returns null with an empty list", () => {
+    expect(listHelper.favoriteBlog([])).toBe(null);
+  });
+
+  test("returns the same blog with one blog list", () => {
+    expect(listHelper.favoriteBlog([blogs[0]])).toEqual(blogs[0]);
+  });
+
+  test("returns blog with highest likes from all blogs", () => {
+    expect(listHelper.favoriteBlog(blogs)).toEqual({
+      _id: "5a422b3a1b54a676234d17f9",
+      title: "Canonical string reduction",
+      author: "Edsger W. Dijkstra",
+      url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
+      likes: 12,
+      __v: 0,
+    });
+  });
+
+  test("returns null when passing a wrong type of argument", () => {});
+  expect(listHelper.favoriteBlog("blogs")).toBe(null);
+});
