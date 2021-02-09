@@ -12,14 +12,42 @@ const favoriteBlog = (blogs) => {
   if (blogs.length === 0) return null;
 
   return blogs.reduce((acc, blog) => {
-    if (acc === undefined) blog
+    if (acc === undefined) blog;
 
-    return blog.likes > acc.likes ? blog : acc
+    return blog.likes > acc.likes ? blog : acc;
   });
-}
+};
+
+const mostBlogs = (blogs) => {
+  if (!Array.isArray(blogs)) return null;
+
+  if (blogs.length === 0) return null;
+
+  numberOfBlogsByAuthor = blogs.reduce((acc, { author }) => {
+    if (acc.hasOwnProperty(author)) {
+      return { ...acc, [author]: acc[author] + 1 };
+    } else {
+      return { ...acc, [author]: 1 };
+    }
+  }, {});
+
+  return Object.entries(numberOfBlogsByAuthor).reduce(
+    (acc, [author, blogs]) => {
+      if (!acc) return { author, blogs };
+
+      if (blogs > acc.blogs) {
+        return { author, blogs };
+      } else {
+        return acc;
+      }
+    },
+    null
+  );
+};
 
 module.exports = {
   dummy,
   totalLikes,
-  favoriteBlog
+  favoriteBlog,
+  mostBlogs,
 };

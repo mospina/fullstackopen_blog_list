@@ -101,3 +101,26 @@ describe("favoriteBlog", () => {
   test("returns null when passing a wrong type of argument", () => {});
   expect(listHelper.favoriteBlog("blogs")).toBe(null);
 });
+
+describe("mostBlogs", () => {
+  test("returns null with an empty list", () => {
+    expect(listHelper.mostBlogs([])).toBe(null);
+  });
+
+  test("returns an object with author and one with one blog list", () => {
+    expect(listHelper.mostBlogs([blogs[0]])).toEqual({
+      author: blogs[0].author,
+      blogs: 1,
+    });
+  });
+
+  test("returns an object with author and number of blogs from all blogs", () => {
+    expect(listHelper.mostBlogs(blogs)).toEqual({
+      author: "Robert C. Martin",
+      blogs: 3,
+    });
+  });
+
+  test("returns null when passing a wrong type of argument", () => {});
+  expect(listHelper.mostBlogs("blogs")).toBe(null);
+});
