@@ -45,9 +45,37 @@ const mostBlogs = (blogs) => {
   );
 };
 
+const mostLikes = (blogs) => {
+  if (!Array.isArray(blogs)) return null;
+
+  if (blogs.length === 0) return null;
+
+  numberOfLikesByAuthor = blogs.reduce((acc, { author, likes }) => {
+    if (acc.hasOwnProperty(author)) {
+      return { ...acc, [author]: acc[author] + likes };
+    } else {
+      return { ...acc, [author]: likes };
+    }
+  }, {});
+
+  return Object.entries(numberOfLikesByAuthor).reduce(
+    (acc, [author, likes]) => {
+      if (!acc) return { author, likes };
+
+      if (likes > acc.likes) {
+        return { author, likes };
+      } else {
+        return acc;
+      }
+    },
+    null
+  );
+};
+
 module.exports = {
   dummy,
   totalLikes,
   favoriteBlog,
   mostBlogs,
+  mostLikes,
 };
