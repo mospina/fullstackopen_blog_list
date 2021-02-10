@@ -140,4 +140,41 @@ describe("post /api/blogs", () => {
   });
 });
 
+describe("delete /api/blogs/:id", () => {
+  const subject = initialBlogs[Math.floor(Math.random() * initialBlogs.length)];
+
+  test("delete blog with given id", async () => {
+    await api.delete(`/api/blogs/${subject._id}`).expect(204);
+  });
+
+  test("number of blogs decreases", async () => {
+    const response = await api.delete(`/api/blogs/${subject._id}`);
+
+    const blogs = await Blog.find({});
+    expect(blogs).toHaveLength(5);
+  });
+
+  test("return 400 if id is invalid", async () => {
+    await api.delete("/api/blogs/0").expect(400);
+  });
+});
+
+describe("put /api/blogs/:id", () => {
+  const subject = initialBlogs[Math.floor(Math.random() * initialBlogs.length)];
+
+  test("delete blog with given id", async () => {
+    await api.delete(`/api/blogs/${subject._id}`).expect(204);
+  });
+
+  test("number of blogs decreases", async () => {
+    const response = await api.delete(`/api/blogs/${subject._id}`);
+
+    const blogs = await Blog.find({});
+    expect(blogs).toHaveLength(5);
+  });
+
+  test("return 400 if id is invalid", async () => {
+    await api.delete("/api/blogs/0").expect(400);
+  });
+});
 afterAll(() => mongoose.connection.close());
