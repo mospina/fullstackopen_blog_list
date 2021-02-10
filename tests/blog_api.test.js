@@ -107,7 +107,7 @@ describe("post /api/blogs", () => {
   test("set likes to 1", async () => {
     const response = await api.post("/api/blogs").send(newBlog);
 
-    expect(response.body.likes).toBe(1);
+    expect(response.body.likes).toBe(0);
   });
 
   test("number of blogs increases", async () => {
@@ -115,6 +115,28 @@ describe("post /api/blogs", () => {
 
     const blogs = await Blog.find({});
     expect(blogs).toHaveLength(7);
+  });
+
+  test("return 400 if author is missing", async () => {
+    const invalidBlog = { ...newBlog };
+    delete invalidBlog.author;
+
+    await api
+      .post("/api/blogs")
+      .send(invalidBlog)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+  });
+
+  test("return 400 if url is missing", async () => {
+    const invalidBlog = { ...newBlog };
+    delete invalidBlog.url;
+
+    await api
+      .post("/api/blogs")
+      .send(invalidBlog)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
   });
 });
 

@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const Blog = require("../models/blog");
 
-router.get("/", async (request, response) => {
+router.get("/", async (request, response, next) => {
   try {
     const blogs = await Blog.find({});
 
@@ -11,7 +11,7 @@ router.get("/", async (request, response) => {
   }
 });
 
-router.post("/", async (request, response) => {
+router.post("/", async (request, response, next) => {
   const blog = new Blog({ ...request.body, likes: 0 });
 
   try {
