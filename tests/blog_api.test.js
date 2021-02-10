@@ -89,4 +89,33 @@ describe("get /api/blogs", () => {
   });
 });
 
+describe("post /api/blogs", () => {
+  const newBlog = {
+    title: "How to Deploy and Manage MongoDB with Docker",
+    author: "Vladimir Kaplarevic",
+    url: "https://phoenixnap.com/kb/docker-mongodb",
+  };
+
+  test("return added blog in JSON format", async () => {
+    await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .expect(201)
+      .expect("Content-Type", /application\/json/);
+  });
+
+  test("set likes to 1", async () => {
+    const response = await api.post("/api/blogs").send(newBlog);
+
+    expect(response.body.likes).toBe(1);
+  });
+
+  test("number of blogs increases", async () => {
+    const response = await api.post("/api/blogs").send(newBlog);
+
+    const blogs = await Blog.find({});
+    expect(blogs).toHaveLength(7);
+  });
+});
+
 afterAll(() => mongoose.connection.close());
