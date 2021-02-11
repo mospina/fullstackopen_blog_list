@@ -162,19 +162,30 @@ describe("delete /api/blogs/:id", () => {
 describe("put /api/blogs/:id", () => {
   const subject = initialBlogs[Math.floor(Math.random() * initialBlogs.length)];
 
-  test("delete blog with given id", async () => {
-    await api.delete(`/api/blogs/${subject._id}`).expect(204);
+  test("update blog with given id", async () => {
+    await api
+      .put(`/api/blogs/${subject._id}`)
+      .send(subject)
+      .expect(200)
+      .expect("Content-Type", /application\/json/);
   });
 
-  test("number of blogs decreases", async () => {
-    const response = await api.delete(`/api/blogs/${subject._id}`);
+  test("increases likes by one if not provided", async () => {
+    const previousLikes = subject.likes;
+    const updatedBlog = { ...subject };
+    delete updatedBlog.likes;
 
-    const blogs = await Blog.find({});
-    expect(blogs).toHaveLength(5);
+    const response = await api
+      .put(`/api/blogs/${subject._id}`)
+      .send(updatedBlog);
+
+    const blog = await Blog.findById(updatedBlog._id);
+    expect(blog.likes).toBe(previousLikes + 1);
   });
 
   test("return 400 if id is invalid", async () => {
-    await api.delete("/api/blogs/0").expect(400);
+    await api.put("/api/blogs/0").expect(400);
   });
 });
+
 afterAll(() => mongoose.connection.close());

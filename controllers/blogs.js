@@ -23,6 +23,23 @@ router.post("/", async (request, response, next) => {
   }
 });
 
+router.put("/:id", async (request, response, next) => {
+  try {
+    const id = request.params.id;
+    const currentBlog = await Blog.findById(id);
+    const payload = request.body;
+    const blog = payload.likes
+      ? { ...payload }
+      : { ...payload, likes: currentBlog.likes + 1 };
+
+    const result = await Blog.findByIdAndUpdate(id, blog, { new: true });
+
+    response.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.delete("/:id", async (request, response, next) => {
   const id = request.params.id;
 
