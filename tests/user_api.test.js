@@ -53,8 +53,8 @@ describe("post /api/users", () => {
   test("doesn't return password or hashPassword", async () => {
     const response = await api.post("/api/users").send(newUser);
 
-    expect(response.password).not.toBeDefined();
-    expect(response.hashPassword).not.toBeDefined();
+    expect(response.body.password).not.toBeDefined();
+    expect(response.body.passwordHash).not.toBeDefined();
   });
 
   test("doesn't store password", async () => {
@@ -95,6 +95,18 @@ describe("post /api/users", () => {
       .expect(400)
       .expect("Content-Type", /application\/json/);
   });
+
+  test("return error message if password is less than 3 characters", async () => {
+    const invalidUser = { ...newUser, password: "nn" };
+
+    const response = await api
+      .post("/api/users")
+      .send(invalidUser)
+
+      expect(response.body.error).toBeDefined()
+      
+  });
+
 
   test("return 400 if username is not unique", async () => {
     const invalidUser = { ...newUser, username: "root" };

@@ -6,11 +6,7 @@ router.get("/", async (request, response, next) => {
   try {
     const users = await User.find({});
 
-    response.json(
-      users.map(({ username, name, id }) => {
-        return { username, name, id };
-      })
-    );
+    response.json(users.map(removePasswordHash));
   } catch (error) {
     next(error);
   }
@@ -22,13 +18,21 @@ router.post("/", async (request, response, next) => {
     if (!password) {
       const error = new Error("Password is required");
 
-      throw { ...error, name: "ValidationError" };
+      throw {
+        ...error,
+        name: "ValidationError",
+        message: "Password is required",
+      };
     }
 
     if (password.length < 3) {
       const error = new Error("Password must have at least 3 characters");
 
-      throw { ...error, name: "ValidationError" };
+      throw {
+        ...error,
+        name: "ValidationError",
+        message: "Password must have at least 3 characters",
+      };
     }
 
     const saltRounds = 10;
@@ -38,9 +42,23 @@ router.post("/", async (request, response, next) => {
 
     const result = await user.save();
 
-    response.status(201).json(result);
+    response.status(201).json(removePasswordHash(result));
   } catch (error) {
     next(error);
   }
 });
+
+const removePasswordHash = ({ username, name, id }) => {
+  if (!username || !name || !id) {
+    const error = new Error("Invalid user data");
+
+    throw {
+      ...error,
+      name: "TypeError",
+      message: "Invalid user data",
+    };
+  }
+
+  return { username, name, id };
+};
 module.exports = router;
