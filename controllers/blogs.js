@@ -1,9 +1,10 @@
 const router = require("express").Router();
 const Blog = require("../models/blog");
+const User = require("../models/user");
 
 router.get("/", async (request, response, next) => {
   try {
-    const blogs = await Blog.find({});
+    const blogs = await Blog.find({}).populate("user");
 
     response.json(blogs);
   } catch (error) {
@@ -12,9 +13,11 @@ router.get("/", async (request, response, next) => {
 });
 
 router.post("/", async (request, response, next) => {
-  const blog = new Blog({ ...request.body, likes: 0 });
+  const payload = request.body;
 
   try {
+    const user = User.findById(payload.userId);
+    const blog = new Blog({ ...payload, likes: 0, user: user._id });
     const result = await blog.save();
 
     response.status(201).json(result);
