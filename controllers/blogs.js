@@ -52,10 +52,19 @@ router.put("/:id", async (request, response, next) => {
 
 router.delete("/:id", async (request, response, next) => {
   const id = request.params.id;
+  const decodedToken = jwt.verify(request.token, process.env.SECRET);
+  if (!decodedToken.id) {
+    return response.status(401).json({ error: "Token missing or invalid" });
+  }
 
   try {
-    await Blog.findByIdAndRemove(id);
+    const userId = decodedToken.id;
+    const blog = await Blog.findById(id);
+    if (!(blog.user.toString() === userId.toString())) {
+      return response.status(401).json({ error: "Only the creator can delete a blog" });
+    }
 
+    await blog.delete()
     response.status(204).end();
   } catch (error) {
     next(error);
