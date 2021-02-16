@@ -1,5 +1,15 @@
 const logger = require("./logger");
 
+const tokenExtractor = (request, response, next) => {
+  const authorization = request.get("authorization");
+  if (authorization && authorization.toLowerCase().startsWith("bearer")) {
+    request.token = authorization.substring(7);
+    next();
+  }
+
+  return response.status(401).json({ error: "Token missing or invalid" });
+};
+
 const requestLogger = (request, response, next) => {
   logger.info("Method:", request.method);
   logger.info("Path:", request.path);
@@ -30,4 +40,5 @@ module.exports = {
   requestLogger,
   unknownEndpoint,
   errorHandler,
+  tokenExtractor,
 };
