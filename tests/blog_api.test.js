@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
 const supertest = require("supertest");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 const app = require("../app");
 const Blog = require("../models/blog");
+const User = require("../models/user");
 
 const api = supertest(app);
 
@@ -59,10 +62,36 @@ const initialBlogs = [
   },
 ];
 
+const user = {
+  username: "root",
+  name: "Root",
+  password: "secret",
+};
+
+const createToken = async (user) => {
+  const loginUser = await User.findOne({ username: user.username });
+  const userForToken = {
+    username: loginUser.username,
+    id: loginUser._id,
+  };
+
+  return jwt.sign(userForToken, process.env.SECRET);
+};
+
 beforeEach(async () => {
+  await User.deleteMany({});
+  const passwordHash = await bcrypt.hash(user.password, 10);
+  const newUser = new User({
+    username: user.username,
+    name: user.name,
+    passwordHash,
+  });
+
+  const owner = await newUser.save();
+
   await Blog.deleteMany({});
   blogs = initialBlogs.map((blog) => {
-    const newBlog = new Blog(blog);
+    const newBlog = new Blog({ ...blog, user: owner.id });
     return newBlog.save();
   });
   await Promise.all(blogs);
@@ -97,33 +126,55 @@ describe("post /api/blogs", () => {
   };
 
   test("return added blog in JSON format", async () => {
+    const token = await createToken(user);
     await api
       .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect("Content-Type", /application\/json/);
   });
 
   test("set likes to 1", async () => {
-    const response = await api.post("/api/blogs").send(newBlog);
+    const token = await createToken(user);
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${token}`);
 
     expect(response.body.likes).toBe(0);
   });
 
   test("number of blogs increases", async () => {
-    const response = await api.post("/api/blogs").send(newBlog);
+    const token = await createToken(user);
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${token}`);
 
     const blogs = await Blog.find({});
     expect(blogs).toHaveLength(7);
   });
 
+  test("set current user to the new blog", async () => {
+    const token = await createToken(user);
+    const response = await api
+      .post("/api/blogs")
+      .send(newBlog)
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.body.user).toBeDefined();
+  });
+
   test("return 400 if author is missing", async () => {
     const invalidBlog = { ...newBlog };
     delete invalidBlog.author;
+    const token = await createToken(user);
 
     await api
       .post("/api/blogs")
       .send(invalidBlog)
+      .set("Authorization", `Bearer ${token}`)
       .expect(400)
       .expect("Content-Type", /application\/json/);
   });
@@ -131,11 +182,24 @@ describe("post /api/blogs", () => {
   test("return 400 if url is missing", async () => {
     const invalidBlog = { ...newBlog };
     delete invalidBlog.url;
+    const token = await createToken(user);
+
+    await api
+      .post("/api/blogs")
+      .set("Authorization", `Bearer ${token}`)
+      .send(invalidBlog)
+      .expect(400)
+      .expect("Content-Type", /application\/json/);
+  });
+
+  test("return 401 if token is missing", async () => {
+    const invalidBlog = { ...newBlog };
+    delete invalidBlog.url;
 
     await api
       .post("/api/blogs")
       .send(invalidBlog)
-      .expect(400)
+      .expect(401)
       .expect("Content-Type", /application\/json/);
   });
 });
@@ -144,18 +208,34 @@ describe("delete /api/blogs/:id", () => {
   const subject = initialBlogs[Math.floor(Math.random() * initialBlogs.length)];
 
   test("delete blog with given id", async () => {
-    await api.delete(`/api/blogs/${subject._id}`).expect(204);
+    const token = await createToken(user);
+    await api
+      .delete(`/api/blogs/${subject._id}`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(204);
   });
 
   test("number of blogs decreases", async () => {
-    const response = await api.delete(`/api/blogs/${subject._id}`);
+    const token = await createToken(user);
+    const response = await api
+      .delete(`/api/blogs/${subject._id}`)
+      .set("Authorization", `Bearer ${token}`);
 
     const blogs = await Blog.find({});
     expect(blogs).toHaveLength(5);
   });
 
   test("return 400 if id is invalid", async () => {
-    await api.delete("/api/blogs/0").expect(400);
+    const token = await createToken(user);
+    await api
+      .delete("/api/blogs/0")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400);
+  });
+
+  test("return 401 when token is missing", async () => {
+    const token = await createToken(user);
+    await api.delete("/api/blogs/0").expect(401);
   });
 });
 

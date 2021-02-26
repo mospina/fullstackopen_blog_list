@@ -14,17 +14,17 @@ router.get("/", async (request, response, next) => {
 });
 
 router.post("/", async (request, response, next) => {
-  const payload = request.body;
-  const decodedToken = jwt.verify(request.token, process.env.SECRET);
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: "Token missing or invalid" });
-  }
-
   try {
-    const user = User.findById(decodedToken.id);
+    const payload = request.body;
+    const decodedToken = jwt.verify(request.token, process.env.SECRET);
+    if (!decodedToken.id) {
+      return response.status(401).json({ error: "Token missing or invalid" });
+    }
+
+    const user = await User.findById(decodedToken.id);
     const blog = new Blog({ ...payload, likes: 0, user: user.id });
     const result = await blog.save();
-    user.blogs.concat(result.id);
+    user.blogs = user.blogs.concat(result.id);
     await user.save();
 
     response.status(201).json(result);
@@ -51,20 +51,22 @@ router.put("/:id", async (request, response, next) => {
 });
 
 router.delete("/:id", async (request, response, next) => {
-  const id = request.params.id;
-  const decodedToken = jwt.verify(request.token, process.env.SECRET);
-  if (!decodedToken.id) {
-    return response.status(401).json({ error: "Token missing or invalid" });
-  }
-
   try {
+    const id = request.params.id;
+    const decodedToken = jwt.verify(request.token, process.env.SECRET);
+    if (!decodedToken.id) {
+      return response.status(401).json({ error: "Token missing or invalid" });
+    }
+
     const userId = decodedToken.id;
     const blog = await Blog.findById(id);
     if (!(blog.user.toString() === userId.toString())) {
-      return response.status(401).json({ error: "Only the creator can delete a blog" });
+      return response
+        .status(401)
+        .json({ error: "Only the creator can delete a blog" });
     }
 
-    await blog.delete()
+    await blog.delete();
     response.status(204).end();
   } catch (error) {
     next(error);
