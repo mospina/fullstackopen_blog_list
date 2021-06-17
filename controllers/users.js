@@ -48,7 +48,7 @@ router.post("/", async (request, response, next) => {
   }
 });
 
-const removePasswordHash = ({ username, name, id }) => {
+const removePasswordHash = ({ username, name, id, blogs }) => {
   if (!username || !name || !id) {
     const error = new Error("Invalid user data");
 
@@ -59,6 +59,6 @@ const removePasswordHash = ({ username, name, id }) => {
     };
   }
 
-  return { username, name, id };
+  return { username, name, id, blogs };
 };
 module.exports = router;
